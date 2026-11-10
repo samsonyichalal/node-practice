@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
+const authenticateToken = require("../middleware/authenticateToken")
 const movieController = require("../controllers/movieController")
+
+router.use(authenticateToken);
 
 // GET all movies
 router.get("/", movieController.getAllMovies);
