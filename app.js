@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 
+const authRouter = require("./routes/authRoutes");
 const movieRouter = require("./routes/movies");
 
 app.use((req, res, next) => {
@@ -21,6 +22,7 @@ app.get("/", (req, res) => {
     });
 });
 
+app.use("/api/auth", authRouter);
 app.use("/api/movies", movieRouter);
 
 app.use((req, res) => {
@@ -43,6 +45,17 @@ app.use((err, req, res, next) => {
             message: "Invalid JSON in request body"
         });
     }
+
+    if (
+    Number.isInteger(err.statusCode) &&
+    err.statusCode >= 400 &&
+    err.statusCode < 500
+) {
+    return res.status(err.statusCode).json({
+        success: false,
+        message: err.message
+    });
+}
 
     return res.status(500).json({
         success: false,
