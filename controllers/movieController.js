@@ -3,7 +3,7 @@ const movieService = require("../services/movieService");
 // GET all movies
 async function getAllMovies(req, res, next) {
     try {
-        const rows = await movieService.getAllMovies();
+        const rows = await movieService.getAllMovies(req.user.id);
 
         return res.status(200).json({
             success: true,
@@ -29,9 +29,9 @@ async function getMovieById(req, res, next) {
             });
         }
 
-        const row = await movieService.getMovieById(id);
+        const rows = await movieService.getMovieById(id, req.user.id);
 
-        if (row.length === 0) {
+        if (rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "Movie not found"
@@ -41,7 +41,7 @@ async function getMovieById(req, res, next) {
         return res.status(200).json({
             success: true,
             message: "Movie retrieved successfully",
-            data: row
+            data: rows
         });
 
     } catch (error) {
@@ -72,7 +72,7 @@ async function createMovie(req, res, next) {
             description: description.trim()
         };
 
-        const movie = await movieService.createMovie(data);
+        const movie = await movieService.createMovie(data, req.user.id);
 
         return res.status(201).json({
             success: true,
@@ -119,7 +119,7 @@ async function updateMovie(req, res, next) {
             description: description.trim()
         };
 
-        const movie = await movieService.updateMovie(id, data);
+        const movie = await movieService.updateMovie(id, data, req.user.id);
 
         if (!movie) {
             return res.status(404).json({
@@ -154,7 +154,7 @@ async function deleteMovie(req, res, next) {
             });
         }
 
-        const deleted = await movieService.deleteMovie(id);
+        const deleted = await movieService.deleteMovie(id, req.user.id);
 
         if (!deleted) {
             return res.status(404).json({

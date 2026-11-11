@@ -3,6 +3,7 @@ const app = express();
 
 const authRouter = require("./routes/authRoutes");
 const movieRouter = require("./routes/movies");
+const adminRouter = require("./routes/adminRoutes")
 
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/movies", movieRouter);
+app.use("/api/admin", adminRouter);
 
 app.use((req, res) => {
     res.status(404).json({

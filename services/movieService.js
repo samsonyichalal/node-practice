@@ -54,43 +54,44 @@ async function transaction(callback) {
 }
 
 // get all movies
-async function getAllMovies() {
+async function getAllMovies(userId) {
     const query = `
         SELECT movie.id, movie.name, movie.author, description.description
         FROM movie LEFT JOIN description
         ON movie.id = description.movie_id
+        WHERE movie.user_id = ?
         ORDER BY movie.id, description.id
     `;
 
-    const [rows] = await pool.query(query);
+    const [rows] = await pool.query(query, [userId]);
 
     return rows;
 }
 
 // get movie by id
-async function getMovieById(id) {
+async function getMovieById(id, userId) {
     const query = `
         SELECT movie.id, movie.name, movie.author, description.description
         FROM movie LEFT JOIN description
         ON movie.id = description.movie_id
-        WHERE movie.id = ?
+        WHERE movie.id = ? AND movie.user_id = ?
         ORDER BY description.id
     `;
 
-    const [row] = await pool.query(query, [id]);
+    const [rows] = await pool.query(query, [id, userId]);
 
-    return row;
+    return rows;
 }
 
 // post movie
-async function createMovie(data) {
+async function createMovie(data, userId) {
     return transaction(async (connection) => {
         const query = `
-        INSERT INTO movie (name, author) 
-        VALUES (?, ?)
+        INSERT INTO movie (name, author, user_id) 
+        VALUES (?, ?, ?)
         `;
 
-        const [result] = await connection.query(query, [data.name, data.author]);
+        const [result] = await connection.query(query, [data.name, data.author, userId]);
         const id = result.insertId;
 
         const insertDescription = `
@@ -104,25 +105,25 @@ async function createMovie(data) {
 }
 
 // update movie
-async function updateMovie(id, data){
+async function updateMovie(id, data, userId){
     return transaction(async (connection) => {
         const [movie] = await connection.query(`
-        SELECT id 
+        SELECT movie.id 
         FROM movie
-        WHERE id = ?
-        `, [id]);
+        WHERE id = ? AND user_id = ?
+        `, [id, userId]);
         
         if(movie.length === 0){
             return null;
         }
 
-        const updateMovie = `
+        const updateMovieQuery = `
         UPDATE movie 
         SET name = ?, author = ?
-        WHERE id = ?
+        WHERE id = ? AND user_id = ?
         `;
 
-        await connection.query(updateMovie, [data.name, data.author, id])
+        await connection.query(updateMovieQuery, [data.name, data.author, id, userId])
 
         const[description] = await connection.query(`
             SELECT id FROM description
@@ -146,12 +147,12 @@ async function updateMovie(id, data){
 }
 
 // Delete movie
-async function deleteMovie(id) {
+async function deleteMovie(id, userId) {
     const movie = `
         DELETE FROM movie
-        WHERE id = ?
+        WHERE id = ? AND user_id = ?
     `;
-    const [result] = await pool.query(movie, [id]);
+    const [result] = await pool.query(movie, [id, userId]);
 
     return result.affectedRows > 0;
 }
